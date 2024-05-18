@@ -41,9 +41,18 @@ module.exports = {
         };
 
         let user = await prisma.user.create({ data: userData });
+
+        const notification = await prisma.notification.create({
+          data: {
+            title: "New User Registered",
+            message: `${user.name} has registered with email ${user.email}`,
+            userId: user.id,
+          },
+        });
         delete user.password;
 
         req.app.get("io").emit("register", { name });
+        req.app.get("io").emit(`user-${user.id}`, notification);
         setTimeout(() => {
           return res.status(201).redirect("/login");
         }, 5000);
@@ -154,7 +163,17 @@ module.exports = {
 
         await sendMail(user.email, "Reset Password", emailContent);
 
+        const notification = await prisma.notification.create({
+          data: {
+            title: "Forgot Password",
+            message: `The forgot password link has been sent to email ${user.email}`,
+            userId: user.id,
+          },
+        });
+
         req.app.get("io").emit("forgot-password", { email });
+        req.app.get("io").emit(`user-${user.id}`, notification);
+
         setTimeout(() => {
           return res.status(201).redirect("/login");
         }, 5000);
@@ -221,12 +240,51 @@ module.exports = {
           data: { password: encryptPass },
         });
 
+        const notification = await prisma.notification.create({
+          data: {
+            title: "New Password Reset",
+            message: `Password successfully reset for username ${user.name} and email ${user.email}`,
+            userId: user.id,
+          },
+        });
+
         req.app.get("io").emit("reset-password", { name });
+        req.app.get("io").emit(`user-${user.id}`, notification);
         setTimeout(() => {
           return res.status(201).redirect("/login");
         }, 5000);
       } catch (error) {
         Sentry.captureException(error);
+        next(error);
+      }
+    }
+  },
+
+  notificationMessage: async (req, res, next) => {
+    if (req.method === "GET") {
+      try {
+        const userId = Number(req.params.id);
+
+        const user = await prisma.user.findUnique({
+          where: {
+            id: userId,
+          },
+        });
+
+        let message = "";
+
+        if (!user) {
+          message = "User not found";
+        }
+
+        const notifications = await prisma.notification.findMany({
+          where: {
+            userId: userId,
+          },
+        });
+
+        res.render("notification-message", { notifications, message, userId });
+      } catch (error) {
         next(error);
       }
     }

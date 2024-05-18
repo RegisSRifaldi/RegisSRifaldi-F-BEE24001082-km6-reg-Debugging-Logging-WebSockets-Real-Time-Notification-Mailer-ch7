@@ -51,4 +51,7 @@ router.post("/forgot-password", auth.forgotPassword);
 router.get("/reset-password", auth.resetPassword);
 router.post("/reset-password", auth.resetPassword);
 
+// Notification
+router.get("/notification-message/:id", auth.notificationMessage);
+
 module.exports = router;

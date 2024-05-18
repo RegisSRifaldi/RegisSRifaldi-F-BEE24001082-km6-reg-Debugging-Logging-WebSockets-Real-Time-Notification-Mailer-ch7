@@ -64,18 +64,6 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("Client disconnected");
   });
-
-  socket.on("register", (data) => {
-    io.emit("register", data);
-  });
-
-  socket.on("forgot-password", (data) => {
-    io.emit("forgot-password", data);
-  });
-
-  socket.on("reset-password", (data) => {
-    io.emit("reset-password", data);
-  });
 });
 
 const PORT = process.env.PORT || 3000;

@@ -27,3 +27,9 @@ http://localhost:3000/forgot-password
 ```sh
 http://localhost:3000/reset-password
 ```
+
+## Page Notification
+
+```sh
+http://localhost:3000/notification-message/1
+```
