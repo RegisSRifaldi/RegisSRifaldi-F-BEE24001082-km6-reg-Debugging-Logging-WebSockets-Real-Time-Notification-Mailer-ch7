@@ -51,4 +51,36 @@ app.use((req, res, next) => {
   });
 });
 
+const http = require("http");
+const server = http.createServer(app);
+const socketIo = require("socket.io");
+const io = socketIo(server);
+
+app.set("io", io);
+
+io.on("connection", (socket) => {
+  console.log("Client connected");
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected");
+  });
+
+  socket.on("register", (data) => {
+    io.emit("register", data);
+  });
+
+  socket.on("forgot-password", (data) => {
+    io.emit("forgot-password", data);
+  });
+
+  socket.on("reset-password", (data) => {
+    io.emit("reset-password", data);
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log("listening on *:", PORT);
+});
+
 module.exports = app;

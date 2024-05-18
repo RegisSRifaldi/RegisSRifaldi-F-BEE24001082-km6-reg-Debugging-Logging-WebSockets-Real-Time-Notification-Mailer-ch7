@@ -43,8 +43,12 @@ module.exports = {
         let user = await prisma.user.create({ data: userData });
         delete user.password;
 
-        return res.status(201).redirect("/login");
+        req.app.get("io").emit("register", { name });
+        setTimeout(() => {
+          return res.status(201).redirect("/login");
+        }, 5000);
       } catch (error) {
+        Sentry.captureException(error);
         next(error);
       }
     }
@@ -92,6 +96,7 @@ module.exports = {
         res.cookie("token", token);
         return res.redirect("/dashboard");
       } catch (error) {
+        Sentry.captureException(error);
         next(error);
       }
     }
@@ -107,6 +112,7 @@ module.exports = {
         user: user,
       });
     } catch (error) {
+      Sentry.captureException(error);
       next(error);
     }
   },
@@ -148,12 +154,12 @@ module.exports = {
 
         await sendMail(user.email, "Reset Password", emailContent);
 
-        return res
-          .status(200)
-          .send(
-            "We have sent a link to your email, to reset your password, check your email immediately!"
-          );
+        req.app.get("io").emit("forgot-password", { email });
+        setTimeout(() => {
+          return res.status(201).redirect("/login");
+        }, 5000);
       } catch (error) {
+        Sentry.captureException(error);
         next(error);
       }
     }
@@ -168,7 +174,7 @@ module.exports = {
     if (req.method === "POST") {
       Sentry.captureException("resetPassword");
       try {
-        const { token, password, confirmPassword } = req.body;
+        const { name, token, password, confirmPassword } = req.body;
 
         if (!token || !password || !confirmPassword) {
           return res.status(400).json({
@@ -215,12 +221,12 @@ module.exports = {
           data: { password: encryptPass },
         });
 
-        return res
-          .status(200)
-          .send(
-            "Password updated successfully. Please login with your new password."
-          );
+        req.app.get("io").emit("reset-password", { name });
+        setTimeout(() => {
+          return res.status(201).redirect("/login");
+        }, 5000);
       } catch (error) {
+        Sentry.captureException(error);
         next(error);
       }
     }
